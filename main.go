@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/io/util"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -19,10 +19,11 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 	for _, fileHeaders := range r.MultipartForm.File {
 		for _, fileHeader := range fileHeaders {
+			log.Println(fileHeader.Filename)
 			file, _ := fileHeader.Open()
 			path := fmt.Sprintf("files/%s", fileHeader.Filename)
 			buf, _ := ioutil.ReadAll(file)
-			ioutil.WriteFile(path, buf, os.ModePerm)
+			ioutil.WriteFile(path, buf, os.FileMode(0755))
 		}
 	}
 

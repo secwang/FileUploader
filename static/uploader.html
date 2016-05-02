@@ -1,0 +1,136 @@
+<html>
+    <header>
+        <style>
+         .container{
+             display: -webkit-flex;
+             display: flex;
+         }
+         #dropzone {
+	           border: solid 1px #C3BDBD;
+	           height: 50px;
+             background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABcCAAAAACT5W7aAAABAElEQVRo3u1ZWw6CMBCcYkWi8VQemAt4LwSJ60ep5SGNbWIVGNJsNylhO9uZNlvUFQAABQwdNbZvjBkViAhcg+vQ70zTuCDlU2ZI+0jqgMhk9QjXHlCIcPkIdZwO20fn6NAZ67iJ3urOOeckDRF+HaFwDYmQKaUsiJC1BUlDHXIvDa8tPPVD4xmzTtPOYykCA96rD2Zce8qWYqM65Im/dITpA3ouFfYnj/ys3g/zQlahlwratwvZgHnONRzleQOyEAqfLCVLSRqmlCylLMhSkub/WRr5//Bo6/ddcDETmZiMa0gd8rRgSqnD3yHUKI3zQir9rmeHZupM3nXfdFkUPAEj3WMMJ095yQAAAABJRU5ErkJggg==);
+             width: 70px;
+	           padding: 20px;
+             margin:  0px 5px;
+         }
+         #files{
+             max-width: 300px;
+             max-height: 300px;
+         }
+         #progress{
+             width: 110px;
+             margin:  0px 5px;
+         }
+        </style>
+        <script>
+         document.addEventListener("DOMContentLoaded", function(){
+             var URL_BLANK_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+             var elDrop = document.getElementById('dropzone');
+             var elContainer = document.getElementsByClassName('container')[0];
+             var progress = document.getElementById('progress');
+
+             elDrop.addEventListener('dragover',function(ev){
+                 ev.preventDefault();
+                 ev.dataTransfer.dropEffect = 'copy';
+                 showDropping();
+             });
+
+             elDrop.addEventListener('dragleave',function(ev){
+                 hideDropping();
+             });
+
+             elDrop.addEventListener('drop',function(ev) {
+                 ev.preventDefault();
+                 hideDropping();
+
+                 var files = ev.dataTransfer.files;
+                 uploadFiles(files);
+                 showFiles(files);
+             });
+
+             function uploadFiles(files){
+                 var formData = new FormData();
+                 for (var i = 0 ; i < files.length; i++ ){
+                     formData.append('file',files[i]);
+                 }
+
+                 var xhr = new XMLHttpRequest();
+
+                 xhr.open('POST','/upload');
+
+                 xhr.upload.onprogress = function(event){
+                     if(event.lengthComputable){
+                         var complete = (event.loaded / event.total * 100 | 0);
+                         progress.value = progress.innerHTML = complete;
+                     }
+                 };
+
+                 xhr.onerror = function() {
+                     console.log('fail'+xhr);
+                 };
+
+                 xhr.onload = function() {
+                     if (xhr.status === 200) {
+                         console.log('upload success' + xhr);
+                         progress.value = progress.innerHTML = 0;
+                     } else {
+                         console.log('Something brooken' + xhr);
+                     }
+                 };
+
+                 xhr.send(formData);
+             }
+
+             function showDropping() {
+                 elDrop.classList.add('dropover');
+             }
+
+             function hideDropping() {
+                 elDrop.classList.remove('dropover');
+             }
+
+
+             function showFiles(files) {
+
+                 for (var i=0, l=files.length; i<l; i++) {
+                     var file = files[i];
+                     var elFile = buildElFile(file);
+                     elContainer.insertBefore(elFile,elContainer.lastElementChild);
+                 }
+             }
+
+
+
+             function buildElFile(file) {
+                 if (file.type.indexOf('image/') === 0) {
+                 var elImage = document.createElement('img');
+                     elImage.src = URL_BLANK_IMAGE;
+                     elContainer.insertBefore(elImage,elContainer.lastElementChild);
+                     attachImage(file, elImage);
+                     return elImage
+                 }
+                 return null;
+             }
+             function attachImage(file, elImage) {
+                 var reader = new FileReader();
+                 reader.onload = function(event) {
+                     var src = event.target.result;
+                     elImage.src = src;
+                     elImage.setAttribute('title',file.name);
+                     elImage.setAttribute('height','90px');
+                     elImage.setAttribute('width','112');
+                 };
+                 reader.readAsDataURL(file);
+             }
+         });
+        </script>
+    </header>
+    <body>
+        <div class="container">
+            <div>
+                <div id="dropzone" effectAllowed="move"> </div>
+                <progress id="progress" min="0" max="100" value="0">0</progress>
+            </div>
+        </div>
+    </body>
+</html>
